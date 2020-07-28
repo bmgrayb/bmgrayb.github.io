@@ -16,26 +16,16 @@
   </head>
   <body>
 
-    <svg width=300 height=300>
-    </svg>
-    <script>
-    var data = [4,8,15,16,23,42];
-    var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
-    var pie = d3.pie();
-    var arc = d3.arc().innerRadius(0).outerRadius(100);
-    margin = 150;
-    
-    d3.select("svg")
-    .append("g")
-    .attr("transform","translate(" + margin + "," + margin + ")")
-    .selectAll("path")
-    .data(pie(data))
-    .enter()
-    .append("path")
-    .attr("d",arc)
-    .attr("fill", function(d,i) {return color[i];});
-    
-    </script>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination justify-content-center pagination-lg">
+        <li class="page-item disabled"><a class="page-link" href="slide_1.html">Previous</a></li>
+        <li class="page-item"><a class="page-link" href="slide_1.html">1</a></li>
+        <li class="page-item"><a class="page-link" href="slide_2.html">2</a></li>
+        <li class="page-item"><a class="page-link" href="slide_3.html">3</a></li>
+        <li class="page-item"><a class="page-link" href="slide_1.html">Next</a></li>
+      </ul>
+    </nav>
+   
 
   </body>
 </html>
