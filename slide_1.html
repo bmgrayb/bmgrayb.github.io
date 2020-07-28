@@ -27,40 +27,74 @@
       </nav>
 
       <div id="slide1">
-        <svg width=300 height=300>
-        </svg>
         <script>
-            var data = d3.csv("data/us-states-processed.csv");
-            console.log(data)
-        
+            async function init() {
+
+                const temp = await d3.csv("https://raw.githubusercontent.com/bmgrayb/bmgrayb.github.io/master/data/us-states-processed.csv");
+                //data = temp.filter(function(d){ return d.state == 'Illinois'});
+                data = temp
+
+                var margin = {top: 10, right: 30, bottom: 30, left: 60},
+                width = 1000 - margin.left - margin.right,
+                height = 500 - margin.top - margin.bottom;
+
+                // append the svg object to the body of the page
+                var svg = d3.select("#slide1")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                var states = d3.nest()
+                .key(function(d) { return d.state;})
+                .entries(data);
+
+                function getDate(d) {
+                    return new Date(d);
+                }
+
+                var maxDate = d3.max(data, function(d) { return getDate(d.date); } );
+                var minDate = d3.min(data, function(d) { return getDate(d.date); } );
+
+                console.log(d3.max(data, function(d) { return d.new_cases; }));
+
+                var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width]);
+                
+                svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x).ticks(8));
+
+                var y = d3.scaleLinear()
+                .domain([0, 5000])
+                .range([ height, 0 ]);
+                
+                svg.append("g").call(d3.axisLeft(y));
+
+                var res = states.map(function(d){ return d.key }) // list of group names
+                var color = d3.scaleOrdinal()
+                    .domain(res)
+                    .range(['orange','blue']);
+
+                svg.selectAll(".line")
+                .data(states)
+                .enter()
+                .append("path")
+                .attr("fill", "none")
+                .attr("stroke", function(d){ return color(d.key) })
+                .attr("stroke-width", 1.5)
+                .attr("d", function(d){
+                    return d3.line()
+                    .x(function(d) { return x(getDate(d.date)); })
+                    .y(function(d) { return y(d.new_cases); })
+                (d.values)});
+
+            }
+
+            init()
+
         </script>
     </div>
 
-    <!--  
-    <div id="slide1">
-        <svg width=300 height=300>
-        </svg>
-        <script>
-        var data = [4,8,15,16,23,42];
-        var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
-        var pie = d3.pie();
-        var arc = d3.arc().innerRadius(0).outerRadius(100);
-        margin = 150;
-        
-        d3.select("#slide1")
-        .select("svg")
-        .append("g")
-        .attr("transform","translate(" + margin + "," + margin + ")")
-        .selectAll("path")
-        .data(pie(data))
-        .enter()
-        .append("path")
-        .attr("d",arc)
-        .attr("fill", function(d,i) {return color[i];});
-        
-        </script>
-    </div>
-    -->
+    
 
 </body>
 </html>
