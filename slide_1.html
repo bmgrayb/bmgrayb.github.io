@@ -27,6 +27,8 @@
       </nav>
 
       <div id="slide1">
+        <div id='tooltip' style='position:absolute;background-color:lightgray;padding:5px'></div>
+
         <script>
             async function init() {
 
@@ -58,7 +60,7 @@
                 //set up axis
                 var maxDate = d3.max(data, function(d) { return getDate(d.date); } );
                 var minDate = d3.min(data, function(d) { return getDate(d.date); } );
-                var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width]);
+                var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width - 75]);
                 svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x).ticks(8));
                 var y = d3.scaleLinear().domain([0, 80000]).range([ height, 0 ]);
                 svg.append("g").call(d3.axisLeft(y));
@@ -79,23 +81,33 @@
                     var mouse = d3.mouse(this);
                     const date = x.invert(mouse[0]);
 
+                    states.sort((a, b) => {
+                        return b.values.find(v => v.date == date.toISOString().slice(0,10)).new_cases - a.values.find(v => v.date == date.toISOString().slice(0,10)).new_cases;
+                    }) 
+
                     tooltipLine.attr('stroke', 'black')
                         .attr('x1', function(d) { return x(date); })
                         .attr('x2', function(d) { return x(date); })
                         .attr('y1', 0)
                         .attr('y2', height);
                     
-                    tooltip.html(date)
+                    var t = 'Daily New Cases';
+                    t += '<br/>Date: ' + date.toISOString().slice(0,10);
+
+                    tooltip.html(t)
                         .style('display', 'block')
                         .style('left', d3.event.pageX + 20)
                         .style('top', d3.event.pageY - 20)
                         .selectAll()
-                        .data(states).enter()
+                        .data(states)
+                        .enter()
                         .append('div')
-                        .style('color', function(d){ return color(d.key); })
+                        .style('color', function(d){ 
+                            return color(d.key); 
+                        })
                         .html(function(d){
                             var curr = d.values.filter(v => v.date == date.toISOString().slice(0,10));
-                            return d.key + ': ' + curr[0].new_cases;
+                            return d.key + ': ' + Math.floor(curr[0].new_cases);
                         });
                 }
                 ///////////////////////////////////////////////////////////////////////
@@ -114,8 +126,6 @@
                     .y(function(d) { return y(d.new_cases); })
                 (d.values)});
 
-                console.log(states.map(m => m.key))
-
                 svg.selectAll()
                 .data(states)
                 .enter()
@@ -123,7 +133,7 @@
                 .html(function(d){ return d.key; })
                 .attr('fill', function(d){ return color(d.key); })
                 .attr('alignment-baseline', 'middle')
-                .attr('x', width)
+                .attr('x', width - 75)
                 .attr('dx', '0.5em')
                 .attr('y', function(d) { 
                     var curr = d.values.filter(v => v.date == maxDate.toISOString().slice(0,10));
