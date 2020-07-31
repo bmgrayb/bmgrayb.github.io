@@ -145,6 +145,20 @@
               .attr('opacity', 0)
               .on('mousemove', drawTooltip)
               .on('mouseout', removeTooltip);
+
+              //first case outside of China in Thailand
+              //2020-01-14
+              var ntnl_emg = svg.append('line')
+              .attr('stroke', 'red')
+              .attr('x1', function(d) { return x(getDate('2020-01-14')); })
+              .attr('x2', function(d) { return x(getDate('2020-01-14')); })
+              .attr('y1', 0)
+              .attr('y2', height)
+              svg.append("text")
+              .attr('x', function(d) { return x(getDate('2020-01-14')) + 5; })
+              .attr('y', 40)
+              .attr('fill', 'red')
+              .html("U.S. Declares <br/> National Emergency");
           }
 
           init()
