@@ -27,21 +27,30 @@
       </nav>
 
       <div id="slide3">
-        <div id='tooltip' style='position:absolute;background-color:lightgray;padding:5px'></div>
         <script>
+            //variables
+            var margin = {top: 10, right: 30, bottom: 30, left: 300},
+            width = 1500 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+            function getDate(d) {
+                return new Date(d);
+            }
+
             async function init() {
+                const data = await d3.csv("https://raw.githubusercontent.com/bmgrayb/bmgrayb.github.io/master/data/us-states-peak.csv");
 
-                //variables
-                var margin = {top: 10, right: 30, bottom: 30, left: 300},
-                width = 1500 - margin.left - margin.right,
-                height = 500 - margin.top - margin.bottom;
-                function getDate(d) {
-                    return new Date(d);
-                }
+                var start = 210
 
-                //read in data
-                const temp = await d3.csv("https://raw.githubusercontent.com/bmgrayb/bmgrayb.github.io/master/data/us-states-processed-sub.csv");
-                data = temp
+                max_cases = d3.max(data, function(d) { return data.cases; } );
+                max_single_day = d3.max(data, function(d) { return d.new_cases; } );
+                
+                var maxDate = d3.max(data, function(d) { return getDate(d.date); } );
+                var minDate = d3.min(data, function(d) { return getDate(d.date); } );
+                var xlog = d3.scaleTime().domain([minDate, maxDate]).range([0, width - 75]);
+                var ylog = d3.scaleLinear().domain([0, max_single_day]).range([ 210, 0 ]);
+
+                console.log("SINGLE: " + max_single_day);
+                console.log(ylog(4797))
 
                 // append the svg object to the body of the page
                 var svg = d3.select("#slide3")
@@ -49,120 +58,37 @@
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                //set up data keys
-                var states = d3.nest()
-                .key(function(d) { return d.state;})
-                .entries(data);
-
-                //set up axis
-                var maxDate = d3.max(data, function(d) { return getDate(d.date); } );
-                var minDate = d3.min(data, function(d) { return getDate(d.date); } );
-                var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width - 75]);
-                svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x).ticks(8));
-                var y = d3.scaleLinear().domain([0, 550000]).range([ height, 0 ]);
-                svg.append("g").call(d3.axisLeft(y));
-
-                //get scale for color
-                var res = states.map(function(d){ return d.key }) // list of group names
-                var color = d3.scaleOrdinal().domain(res).range(d3.schemeCategory10);
-
-                ///////////////////////////////////////////////////////////////////////
-                //tooltip functions
-                const tooltip = d3.select('#tooltip');
-                const tooltipLine = svg.append('line');
-                function removeTooltip() {
-                    if (tooltip) tooltip.style('display', 'none');
-                    if (tooltipLine) tooltipLine.attr('stroke', 'none');
-                }
-                function drawTooltip() {
-                    var mouse = d3.mouse(this);
-                    const date = x.invert(mouse[0]);
-
-                    states.sort((a, b) => {
-                        return b.values.find(v => v.date == date.toISOString().slice(0,10)).cases - a.values.find(v => v.date == date.toISOString().slice(0,10)).cases;
-                    }) 
-
-                    tooltipLine.attr('stroke', 'black')
-                        .attr('x1', function(d) { return x(date); })
-                        .attr('x2', function(d) { return x(date); })
-                        .attr('y1', 0)
-                        .attr('y2', height);
-                    
-                    var t = 'Daily New Cases';
-                    t += '<br/>Date: ' + date.toISOString().slice(0,10);
-
-                    tooltip.html(t)
-                        .style('display', 'block')
-                        .style('left', d3.event.pageX + 20)
-                        .style('top', d3.event.pageY - 20)
-                        .selectAll()
-                        .data(states)
-                        .enter()
-                        .append('div')
-                        .style('color', function(d){ 
-                            return color(d.key); 
-                        })
-                        .html(function(d){
-                            var curr = d.values.filter(v => v.date == date.toISOString().slice(0,10));
-                            return d.key + ': ' + Math.floor(curr[0].cases);
-                        });
-                }
-                ///////////////////////////////////////////////////////////////////////
-
-                //line chart
-                svg.selectAll(".line")
-                .data(states)
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .selectAll("circle")
+                .data(data)
                 .enter()
-                .append("path")
-                .attr("fill", "none")
-                .attr("stroke", function(d){ return color(d.key) })
-                .attr("stroke-width", 1.5)
-                .attr("d", function(d){
-                    return d3.line()
-                    .x(function(d) { return x(getDate(d.date)); })
-                    .y(function(d) { return y(d.cases); })
-                (d.values)});
+                .append("circle")
+                .attr("cx",function(d,i) { 
+                    return xlog(getDate(d.date)); 
+                })
+                .attr("cy",function(d) { 
+                    console.log(d.new_cases);
+                    console.log(ylog(Number(d.new_cases)));
+                    return ylog(Number(d.new_cases)); 
+                })
+                .attr("r",function(d,i) { 
+                    return Number(d.deaths)/1000; 
+                })
 
-                svg.selectAll()
-                .data(states)
-                .enter()
-                .append('text')
-                .html(function(d){ return d.key; })
-                .attr('fill', function(d){ return color(d.key); })
-                .attr('alignment-baseline', 'middle')
-                .attr('x', width - 75)
-                .attr('dx', '0.5em')
-                .attr('y', function(d) { 
-                    var curr = d.values.filter(v => v.date == maxDate.toISOString().slice(0,10));
-                    return y(curr[0].cases); 
-                }); 
+                d3.select("svg")
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .call(d3.axisLeft(ylog).tickValues([10,20,50,100]).tickFormat(d3.format("~s")));
 
-                var tipBox = svg.append('rect')
-                .attr('width', width)
-                .attr('height', height)
-                .attr('opacity', 0)
-                .on('mousemove', drawTooltip)
-                .on('mouseout', removeTooltip);
+                d3.select("svg")
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + start + ")")
+                .call(d3.axisBottom(xlog).tickValues([10,20,50,100]).tickFormat(d3.format("~s")));
 
-                //add nantional emergency line
-                //2020-03-13
-                var ntnl_emg = svg.append('line')
-                .attr('stroke', 'red')
-                .attr('x1', function(d) { return x(getDate('2020-03-13')); })
-                .attr('x2', function(d) { return x(getDate('2020-03-13')); })
-                .attr('y1', 0)
-                .attr('y2', height)
-                svg.append("text")
-                .attr('x', function(d) { return x(getDate('2020-03-13')) + 5; })
-                .attr('y', 40)
-                .attr('fill', 'red')
-                .html("U.S. Declares <br/> National Emergency");
-
-            }
-
+            }    
+  
             init()
+  
         </script>
     </div>
 

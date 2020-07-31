@@ -25,23 +25,20 @@
           <li class="page-item"><a class="page-link" href="slide_3.html">Next</a></li>
         </ul>
       </nav>
-
-    <div id="slide2">
-        <div id='tooltip' style='position:absolute;background-color:lightgray;padding:5px'></div>
+      <div id='tooltip' style='position:absolute;background-color:lightgray;padding:5px'></div>
+      <div id="slide2">
         <script>
-            async function init() {
 
-                //variables
-                var margin = {top: 10, right: 30, bottom: 30, left: 300},
-                width = 1500 - margin.left - margin.right,
-                height = 500 - margin.top - margin.bottom;
-                function getDate(d) {
-                    return new Date(d);
-                }
+            //variables
+            var margin = {top: 10, right: 30, bottom: 30, left: 300},
+            width = 1500 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+            function getDate(d) {
+                return new Date(d);
+            }
 
-                //read in data
-                const temp = await d3.csv("https://raw.githubusercontent.com/bmgrayb/bmgrayb.github.io/master/data/us-states-processed-sub.csv");
-                data = temp
+            function update(column_name){
+                $('#slide2').empty();               
 
                 // append the svg object to the body of the page
                 var svg = d3.select("#slide2")
@@ -56,12 +53,16 @@
                 .key(function(d) { return d.state;})
                 .entries(data);
 
+                scale_range = -1;
+                if(column_name === 'cases'){ scale_range = 550000;}
+                else if(column_name === 'new_cases'){ scale_range = 18000;}
+
                 //set up axis
                 var maxDate = d3.max(data, function(d) { return getDate(d.date); } );
                 var minDate = d3.min(data, function(d) { return getDate(d.date); } );
                 var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width - 75]);
                 svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x).ticks(8));
-                var y = d3.scaleLinear().domain([0, 18000]).range([ height, 0 ]);
+                var y = d3.scaleLinear().domain([0, scale_range]).range([ height, 0 ]);
                 svg.append("g").call(d3.axisLeft(y));
 
                 //get scale for color
@@ -76,12 +77,13 @@
                     if (tooltip) tooltip.style('display', 'none');
                     if (tooltipLine) tooltipLine.attr('stroke', 'none');
                 }
+
                 function drawTooltip() {
                     var mouse = d3.mouse(this);
                     const date = x.invert(mouse[0]);
 
                     states.sort((a, b) => {
-                        return b.values.find(v => v.date == date.toISOString().slice(0,10)).new_cases - a.values.find(v => v.date == date.toISOString().slice(0,10)).new_cases;
+                        return b.values.find(v => v.date == date.toISOString().slice(0,10)).cases - a.values.find(v => v.date == date.toISOString().slice(0,10)).cases;
                     }) 
 
                     tooltipLine.attr('stroke', 'black')
@@ -90,7 +92,9 @@
                         .attr('y1', 0)
                         .attr('y2', height);
                     
-                    var t = 'Daily New Cases';
+                    var t = "";
+                    if(column_name === 'cases'){ t = 'Total Cases';}
+                    else if(column_name === 'new_cases'){ t = 'Daily New Cases';}
                     t += '<br/>Date: ' + date.toISOString().slice(0,10);
 
                     tooltip.html(t)
@@ -106,7 +110,7 @@
                         })
                         .html(function(d){
                             var curr = d.values.filter(v => v.date == date.toISOString().slice(0,10));
-                            return d.key + ': ' + Math.floor(curr[0].new_cases);
+                            return d.key + ': ' + Math.floor(curr[0][column_name]);
                         });
                 }
                 ///////////////////////////////////////////////////////////////////////
@@ -122,7 +126,7 @@
                 .attr("d", function(d){
                     return d3.line()
                     .x(function(d) { return x(getDate(d.date)); })
-                    .y(function(d) { return y(d.new_cases); })
+                    .y(function(d) { return y(d[column_name]); })
                 (d.values)});
 
                 svg.selectAll()
@@ -136,7 +140,7 @@
                 .attr('dx', '0.5em')
                 .attr('y', function(d) { 
                     var curr = d.values.filter(v => v.date == maxDate.toISOString().slice(0,10));
-                    return y(curr[0].new_cases); 
+                    return y(curr[0][column_name]); 
                 }); 
 
                 var tipBox = svg.append('rect')
@@ -161,10 +165,22 @@
                 .html("U.S. Declares <br/> National Emergency");
 
             }
+            
+            async function init() {
 
+                //read in data
+                const temp = await d3.csv("https://raw.githubusercontent.com/bmgrayb/bmgrayb.github.io/master/data/us-states-processed-sub.csv");
+                data = temp
+
+                update('new_cases')
+            }  
             init()
+    
         </script>
     </div>
-
+    <div class="text-center">
+        <button class="btn btn-primary" type="submit" onclick="update('new_cases')">New Cases</button>
+        <button class="btn btn-primary" type="submit" onclick="update('cases')">Total Cases</button>
+    </div>
 </body>
 </html>
