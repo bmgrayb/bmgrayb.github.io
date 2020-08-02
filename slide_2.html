@@ -25,6 +25,18 @@
           <li class="page-item"><a class="page-link" href="slide_3.html">Next</a></li>
         </ul>
       </nav>
+
+        <div>
+            <h1>State Specific Covid-19 Cases</h1>
+            <p>This slide shows both the daily new coronavirus cases, as well as cumulative cases on given dates. <br/>
+                As you can see, New York had a very high peak early on in the pandemic while states like Texas and <br/>
+                Florida weren't too affected. However, now New York's daily new cases are significantly lower than <br/>
+                Texas, Florida, and California. We can see that states who have high daily cases later into the pandemic <br/>
+                also have higher cumulative cases.
+            </p>
+            <p>Move your mouse over the graph to see daily new cases or cumulative cases for each state.</p>
+        </div>
+
       <div id='tooltip' style='position:absolute;background-color:lightgray;padding:5px'></div>
       <div id="slide2">
         <script>
@@ -83,7 +95,7 @@
                     const date = x.invert(mouse[0]);
 
                     states.sort((a, b) => {
-                        return b.values.find(v => v.date == date.toISOString().slice(0,10)).cases - a.values.find(v => v.date == date.toISOString().slice(0,10)).cases;
+                        return b.values.find(v => v.date == date.toISOString().slice(0,10))[column_name] - a.values.find(v => v.date == date.toISOString().slice(0,10))[column_name];
                     }) 
 
                     tooltipLine.attr('stroke', 'black')
@@ -164,6 +176,19 @@
                 .attr('fill', 'red')
                 .html("U.S. Declares <br/> National Emergency");
 
+                svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - 100)
+                .attr("x",0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Cases"); 
+                svg.append("text")             
+                .attr("transform", "translate(" + (width/2) + " ," + 
+                    (height + margin.top + 20) + ")")
+                .style("text-anchor", "middle")
+                .text("Date");
+
             }
             
             async function init() {
@@ -178,6 +203,7 @@
     
         </script>
     </div>
+    <br/><br/>
     <div class="text-center">
         <button class="btn btn-primary" type="submit" onclick="update('new_cases')">New Cases</button>
         <button class="btn btn-primary" type="submit" onclick="update('cases')">Total Cases</button>

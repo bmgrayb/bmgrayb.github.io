@@ -12,7 +12,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
-    <title>Hello, world!</title>
+    <title>Covid-19 Data</title>
   </head>
   <body>
 
@@ -25,6 +25,20 @@
         <li class="page-item"><a class="page-link" href="slide_2.html">Next</a></li>
       </ul>
     </nav>
+
+    <div>
+        <h1> The U.S. Response to Covid-19</h1>
+        <p> As you may know, the United States response to the Covid-19 pandemic has been poor. In this graph, <br/>
+            we see that even 8 months into this pandemic, daily new cases are still trending upwards for the <br/>
+            U.S., as well as India and Brazil. However, the U.S. has accounted for about 25% of all deaths. <br/>
+            One reason for this could be no cohesive strategy coming from the federal level exists, allowing <br/>
+            each state to determine how best to handle the pandemic. As we will see, states that didn't shut down <br/>
+            early enough or reoppened too early have been hit more severly.
+        </p>
+        <p> Move your mouse over the graph to see how the U.S. compares to other countries.</p>
+        <p> Move on to the next slide to see state level data surrounding the coronavirus.</p>
+    </div>
+
     <div id="slide1">
       <div id='tooltip' style='position:absolute;background-color:lightgray;padding:5px'></div>
 
@@ -158,7 +172,21 @@
               .attr('x', function(d) { return x(getDate('2020-01-14')) + 5; })
               .attr('y', 40)
               .attr('fill', 'red')
-              .html("U.S. Declares <br/> National Emergency");
+              .html("First Case Outside China");
+
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - 100)
+                .attr("x",0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Daily New Cases"); 
+            svg.append("text")             
+                .attr("transform", "translate(" + (width/2) + " ," + 
+                    (height + margin.top + 20) + ")")
+                .style("text-anchor", "middle")
+                .text("Date");
+
           }
 
           init()

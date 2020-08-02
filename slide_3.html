@@ -26,6 +26,16 @@
         </ul>
       </nav>
 
+      <div>
+        <h1>State's Respective Coronavirus Peak</h1>
+        <p> This slide is meant to demonstrate each state's single day case peak, as well as the date that peak occured. <br/>
+            Because cases are still going up, this graph will still be in flux. However, we can see a clear trend that states <br/>
+            whose peaks are later into the pandemic also have a higher number of single day cases at that peak. This is <br/>
+            likely because these states were reluctant to go on lockdown early on or reopened too early.
+        </p>
+        <p>Hover your mouse over each cirlce to see the state and their respective Covid-19 deaths.</p>
+    </div>
+
       <div id="slide3">
         <script>
             //variables
@@ -42,15 +52,49 @@
                 var start = 210
 
                 max_cases = d3.max(data, function(d) { return data.cases; } );
-                max_single_day = d3.max(data, function(d) { return d.new_cases; } );
+                max_single_day = d3.max(data, function(d) { return Number(d.new_cases); } ); //15300
                 
                 var maxDate = d3.max(data, function(d) { return getDate(d.date); } );
                 var minDate = d3.min(data, function(d) { return getDate(d.date); } );
-                var xlog = d3.scaleTime().domain([minDate, maxDate]).range([0, width - 75]);
-                var ylog = d3.scaleLinear().domain([0, max_single_day]).range([ 210, 0 ]);
+                var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width - 75]);
+                var ylog = d3.scaleLinear().domain([0, Number(max_single_day) + 1000]).range([ 450, 0 ]);
 
-                console.log("SINGLE: " + max_single_day);
-                console.log(ylog(4797))
+                //get scale for color
+                var res = data.map(function(d){ return d.state }) // list of group names
+                var color = d3.scaleOrdinal().domain(res).range(d3.schemeCategory10);
+
+                var tooltip = d3.select("#slide3")
+                .append("div")
+                .style("opacity", 0)
+                .attr("class", "tooltip")
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "2px")
+                .style("border-radius", "5px")
+                .style("padding", "5px")
+
+            // Three function that change the tooltip when user hover / move / leave a cell
+            var mouseover = function(d) {
+                tooltip
+                .style("opacity", 1)
+                d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+            }
+            var mousemove = function(d) {
+                tooltip
+                .html("<b>" + d.state + "</b><br/> Total Deaths: " + d.deaths)
+                .style("left", (d3.mouse(this)[0] + 120) + "px")
+                .style("top", (d3.mouse(this)[1] + 50) + "px")
+            }
+            var mouseleave = function(d) {
+                tooltip
+                .style("opacity", 0)
+                d3.select(this)
+                .style("stroke", "none")
+                .style("opacity", 0.8)
+            }
+
 
                 // append the svg object to the body of the page
                 var svg = d3.select("#slide3")
@@ -63,27 +107,40 @@
                 .data(data)
                 .enter()
                 .append("circle")
+                .attr("fill", function(d){ return color(d.state) })
                 .attr("cx",function(d,i) { 
-                    return xlog(getDate(d.date)); 
+                    return x(getDate(d.date)); 
                 })
                 .attr("cy",function(d) { 
-                    console.log(d.new_cases);
-                    console.log(ylog(Number(d.new_cases)));
                     return ylog(Number(d.new_cases)); 
                 })
                 .attr("r",function(d,i) { 
-                    return Number(d.deaths)/1000; 
+                    return Number(d.deaths)/300; 
                 })
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
 
                 d3.select("svg")
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-                .call(d3.axisLeft(ylog).tickValues([10,20,50,100]).tickFormat(d3.format("~s")));
+                .call(d3.axisLeft(ylog).tickFormat(d3.format("~s")));
 
-                d3.select("svg")
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + start + ")")
-                .call(d3.axisBottom(xlog).tickValues([10,20,50,100]).tickFormat(d3.format("~s")));
+                d3.select("svg").append("g").attr("transform", "translate(" +margin.left + "," + height + ")").call(d3.axisBottom(x).ticks(8));
+
+                d3.select("svg").append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 200)
+                .attr("x",-200)
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Single Day Peak Number of Cases"); 
+
+                d3.select("svg").append("text")             
+                .attr("transform", "translate(" + 820 + " ," + 
+                    (height + margin.top + 25) + ")")
+                .style("text-anchor", "middle")
+                .text("Date of Single Day Peak");
 
             }    
   
