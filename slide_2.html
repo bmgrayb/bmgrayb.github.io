@@ -105,7 +105,7 @@
                         .attr('y2', height);
                     
                     var t = "";
-                    if(column_name === 'cases'){ t = 'Total Cases';}
+                    if(column_name === 'cases'){ t = 'Cumulative Cases';}
                     else if(column_name === 'new_cases'){ t = 'Daily New Cases';}
                     t += '<br/>Date: ' + date.toISOString().slice(0,10);
 
@@ -176,13 +176,16 @@
                 .attr('fill', 'red')
                 .html("U.S. Declares <br/> National Emergency");
 
+                ylabel = "";
+                if(column_name === 'cases'){ ylabel = "Cumulative Cases";}
+                else if(column_name === 'new_cases'){ ylabel = "Daily New Cases";}
                 svg.append("text")
                 .attr("transform", "rotate(-90)")
                 .attr("y", 0 - 100)
                 .attr("x",0 - (height / 2))
                 .attr("dy", "1em")
                 .style("text-anchor", "middle")
-                .text("Cases"); 
+                .text(ylabel); 
                 svg.append("text")             
                 .attr("transform", "translate(" + (width/2) + " ," + 
                     (height + margin.top + 20) + ")")
