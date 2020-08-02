@@ -83,7 +83,7 @@
             }
             var mousemove = function(d) {
                 tooltip
-                .html("<b>" + d.state + "</b><br/> Total Deaths: " + d.deaths)
+                .html("<b>" + d.state + "</b>" + "<br/> <b>Date:</b> " + d.date + "<br/> <b>Total Deaths:</b> " + d.deaths) 
                 .style("left", (d3.mouse(this)[0] + 200) + "px")
                 .style("top", (d3.mouse(this)[1] + 200) + "px")
             }
